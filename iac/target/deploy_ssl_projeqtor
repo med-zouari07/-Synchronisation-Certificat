@@ -1,0 +1,40 @@
+---
+- name: Fetch SSL certificates from reverse proxy
+###################################################################################
+## ****************** Global Common ******************
+###################################################################################
+  hosts: projeqtor_server
+  tasks:
+    - name: Ensure local directory exists on source server (10.10.20.47)
+      local_action:
+        module: file
+        path: "{{ local_cert_path }}"
+        state: directory
+        mode: '0755'
+      run_once: true
+
+###################################################################################
+## ProjeQtor
+###################################################################################
+    - name: Copy discovery.pem to remote server as apache.pem
+      copy:
+        src: "{{ local_cert_path }}/discovery.pem"
+        dest: "{{ remote_cert_path }}/discovery.pem"
+        owner: apache
+        group: apache
+        mode: '0644'
+
+    - name: Copy discovery.key.pem to remote server as discovery.key.pem
+      copy:
+        src: "{{ local_cert_path }}/discovery.key.pem"
+        dest: "{{ remote_cert_path }}/discovery.key.pem"
+        owner: apache
+        group: apache
+        mode: '0600'
+
+    - name: Restart apache server
+      become: true
+      systemd:
+        name: httpd
+        state: restarted
+

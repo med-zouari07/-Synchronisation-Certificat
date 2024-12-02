@@ -1,0 +1,26 @@
+# fetch_ssl_certificates.yml
+
+---
+- name: Fetch SSL certificates from reverse proxy
+  hosts: reverse_proxy
+  tasks:
+    - name: Ensure local directory exists
+      local_action:
+        module: file
+        path: "{{ local_cert_path }}"
+        state: directory
+        mode: '0755'
+      run_once: true
+
+    - name: Fetch fullchain.pem from reverse proxy
+      ansible.builtin.fetch:
+        src: "{{ remote_cert_path }}/fullchain.pem"
+        dest: "{{ local_cert_path }}/discovery.pem"
+        flat: yes
+
+    - name: Fetch privkey.pem from reverse proxy
+      ansible.builtin.fetch:
+        src: "{{ remote_cert_path }}/privkey.pem"
+        dest: "{{ local_cert_path }}/discovery.key.pem"
+        flat: yes
+

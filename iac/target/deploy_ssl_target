@@ -1,0 +1,40 @@
+---
+- name: Fetch SSL certificates from reverse proxy
+###################################################################################
+## ****************** Global Common ******************
+###################################################################################
+  hosts: grafana_server
+  tasks:
+    - name: Ensure local directory exists on source server (10.10.20.47)
+      local_action:
+        module: file
+        path: "{{ local_cert_path }}"
+        state: directory
+        mode: '0755'
+      run_once: true
+
+###################################################################################
+## Grafana
+###################################################################################
+    - name: Copy fullchain.pem to remote server as grafana.pem
+      copy:
+        src: "{{ local_cert_path }}/fullchain.pem"
+        dest: "{{ remote_cert_path }}/discovery.pem"
+        owner: grafana
+        group: grafana
+        mode: '0644'
+
+    - name: Copy privkey.pem to remote server as privkey3.pem
+      copy:
+        src: "{{ local_cert_path }}/privkey.pem"
+        dest: "{{ remote_cert_path }}/discovery.key.pem"
+        owner: grafana
+        group: grafana
+        mode: '0600'
+
+    - name: Restart Grafana server
+      become: true
+      systemd:
+        name: grafana-server
+        state: restarted
+
